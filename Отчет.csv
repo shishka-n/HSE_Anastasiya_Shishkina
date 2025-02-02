@@ -1,0 +1,109 @@
+;Запрос;Отчет;;;;;
+1. Выводить список студентов по определённому предмету;"SELECT s.first_name, s.last_name
+FROM Students s
+JOIN Enrollments e ON s.student_id = e.student_id
+JOIN Courses c ON e.course_id = c.course_id
+WHERE c.course_name = 'Название_предмета';
+SELECT s.first_name, s.last_name
+FROM Students s
+JOIN Enrollments e ON s.student_id = e.student_id
+JOIN Courses c ON e.course_id = c.course_id
+WHERE c.course_name = 'Название_предмета';
+";first_name,last_name;;;;;
+2. Выводить список предметов, которые преподает конкретный преподаватель;"SELECT c.course_name
+FROM Courses c
+JOIN Teachers t ON c.teacher_id = t.teacher_id
+WHERE t.first_name = 'Имя' AND t.last_name = 'Фамилия';";course_name;;;;;
+3. Выводить средний балл студента по всем предметам;"SELECT AVG(g.grade) AS average_grade
+FROM Grades g
+JOIN Enrollments e ON g.enrollment_id = e.enrollment_id
+JOIN Students s ON e.student_id = s.student_id
+WHERE s.first_name = 'Имя' AND s.last_name = 'Фамилия';
+";average_grade NULL;;;;;
+4. Выводить рейтинг преподавателей по средней оценке студентов;"SELECT t.first_name, t.last_name, AVG(g.grade) AS average_grade
+FROM Teachers t
+JOIN Courses c ON t.teacher_id = c.teacher_id
+JOIN Enrollments e ON c.course_id = e.course_id
+JOIN Grades g ON e.enrollment_id = g.enrollment_id
+GROUP BY t.teacher_id
+ORDER BY average_grade DESC;
+";first_name,last_name,average_grade;;;;;
+5. Выводить список преподавателей, которые преподавали более 3 предметов за последний год;"SELECT t.first_name, t.last_name
+FROM Teachers t
+JOIN Courses c ON t.teacher_id = c.teacher_id
+WHERE YEAR(c.hire_date) >= YEAR(CURDATE()) - 1
+GROUP BY t.teacher_id
+HAVING COUNT(c.course_id) > 3;
+";first_name,last_name;;;;;
+6. Выводить список студентов, которые имеют средний балл выше 4 по математическим предметам, но ниже 3 по гуманитарным;"SELECT s.first_name, s.last_name
+FROM Students s
+JOIN Enrollments e ON s.student_id = e.student_id
+JOIN Grades g ON e.enrollment_id = g.enrollment_id
+JOIN Courses c ON e.course_id = c.course_id
+GROUP BY s.student_id
+HAVING AVG(CASE WHEN c.course_name LIKE '%математика%' THEN g.grade END) > 4
+   AND AVG(CASE WHEN c.course_name LIKE '%гуманитарный%' THEN g.grade END) < 3;
+";first_name,last_name;;;;;
+7. Определить предметы, по которым больше всего двоек в текущем семестре;"SELECT c.course_name, COUNT(g.grade) AS count_of_twos
+FROM Grades g
+JOIN Enrollments e ON g.enrollment_id = e.enrollment_id
+JOIN Courses c ON e.course_id = c.course_id
+WHERE g.grade = 2
+AND e.enrollment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+GROUP BY c.course_name
+ORDER BY count_of_twos DESC;
+";course_name,count_of_twos;;;;;
+8. Выводить студентов, которые получили высший балл по всем своим экзаменам, и преподавателей, которые вели эти предметы;"SELECT s.first_name, s.last_name, t.first_name AS teacher_first_name, t.last_name AS teacher_last_name
+FROM Students s
+JOIN Enrollments e ON s.student_id = e.student_id
+JOIN Grades g ON e.enrollment_id = g.enrollment_id
+JOIN Courses c ON e.course_id = c.course_id
+JOIN Teachers t ON c.teacher_id = t.teacher_id
+WHERE g.grade = 5;
+";first_name,last_name,teacher_first_name,teacher_last_name;;;;;
+9. Просматривать изменение среднего балла студента по годам обучения;"SELECT YEAR(e.enrollment_date) AS year, AVG(g.grade) AS average_grade
+FROM Enrollments e
+JOIN Grades g ON e.enrollment_id = g.enrollment_id
+WHERE e.student_id = (SELECT student_id FROM Students WHERE first_name = 'Имя' AND last_name = 'Фамилия')
+GROUP BY YEAR(e.enrollment_date)
+ORDER BY year;
+";year,average_grade;;;;;
+10. Определить группы, в которых средний балл выше, чем в других, по аналогичным предметам;"SELECT e.course_id, AVG(g.grade) AS average_grade
+FROM Enrollments e
+JOIN Grades g ON e.enrollment_id = g.enrollment_id
+GROUP BY e.course_id
+HAVING average_grade > (SELECT AVG(g2.grade)
+                         FROM Enrollments e2
+                         JOIN Grades g2 ON e2.enrollment_id = g2.enrollment_id
+                         WHERE e2.course_id = e.course_id);
+";course_id,average_grade;;;;;
+11. Вставка записи о новом студенте;"INSERT INTO Students (first_name, last_name, middle_name, birth_date, contact_info, enrollment_date)
+VALUES ('Имя', 'Фамилия', 'Отчество', 'YYYY-MM-DD', 'Контактные данные', 'YYYY-MM-DD');
+";;;;;;
+12. Обновление контактной информации преподавателя;"UPDATE Teachers
+SET contact_info = 'Новая контактная информация'
+WHERE teacher_id = 'Идентификатор преподавателя' OR (first_name = 'Имя' AND last_name = 'Фамилия');
+";;;;;;
+13. Удаление записи о предмете;"
+DELETE FROM Grades
+WHERE enrollment_id IN (
+    SELECT enrollment_id
+    FROM Enrollments
+    WHERE course_id = 'Идентификатор предмета'
+);
+
+-- Удаление записей о зачислении на предмет
+DELETE FROM Enrollments
+WHERE course_id = 'Идентификатор предмета';
+
+-- Удаление самого предмета
+DELETE FROM Courses
+WHERE course_id = 'Идентификатор предмета';
+";;;;;;
+14. Вставка новой записи об оценке;;;;;;;
+;;;;;;;
+;;;;;;;
+;;;;;;;
+;;;;;;;
+;;;;;;;
+;;;;;;;
